@@ -1,0 +1,33 @@
+name: Commit Message Validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, edited]
+
+jobs:
+  validate-commit-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate commit messages
+        run: |
+          pattern="^(JIRA-[0-9]+):"
+
+          commits=$(git log origin/${{ github.base_ref }}..HEAD --pretty=format:%s)
+
+          for commit in "$commits"
+          do
+            if [[ ! "$commit" =~ $pattern ]]; then
+              echo "Invalid commit message: $commit"
+              echo "Commit must start with: JIRA-123: message"
+              exit 1
+            fi
+          done
+
+          echo "✅ All commit messages follow the pattern"
